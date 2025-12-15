@@ -10,7 +10,8 @@ import 'package:fashion_app/service_locator.dart';
 
 /// Splash Screen - Initial page shown when app launches
 ///
-/// Displays the splash.png image for 3 seconds
+/// Displays the splash.png image for 3 seconds with elegant animation
+/// Animation: Fade In + Scale (starts small and transparent, grows to full size)
 /// Then checks authentication status and navigates accordingly:
 /// - If user is logged in → Navigate to HomePage
 /// - If user is not logged in → Navigate to SignInPage
@@ -21,11 +22,54 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+    _startAnimation();
     _initializeAndNavigate();
+  }
+
+  /// Initialize animation controller and animations
+  void _initializeAnimations() {
+    // Animation controller - 1.5 seconds duration
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Fade animation: 0.0 (transparent) to 1.0 (opaque)
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    // Scale animation: 0.8 (80% size) to 1.0 (100% size)
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+
+  /// Start the animation
+  void _startAnimation() {
+    _animationController.forward();
   }
 
   /// Initialize app and navigate after checking auth status
@@ -75,15 +119,33 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: Image.asset(
-          AppImages.splash,
-          fit: BoxFit.contain,
-          width: double.infinity,
-          height: double.infinity,
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: child,
+              ),
+            );
+          },
+          child: Image.asset(
+            AppImages.splash,
+            fit: BoxFit.contain,
+            width: double.infinity,
+            height: double.infinity,
+          ),
         ),
       ),
     );
