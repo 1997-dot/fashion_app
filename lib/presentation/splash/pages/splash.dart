@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:fashion_app/core/configs/assets/app_images.dart';
 import 'package:fashion_app/core/configs/theme/app_colors.dart';
-import 'package:fashion_app/core/constants/app_constants.dart';
+import 'package:fashion_app/core/constants/storage_constants.dart';
+import 'package:fashion_app/presentation/home/pages/home.dart';
+import 'package:fashion_app/presentation/auth/pages/signin.dart';
+import 'package:fashion_app/service_locator.dart';
 
 /// Splash Screen - Initial page shown when app launches
 ///
-/// Responsibilities:
-/// 1. Display app branding (logo, tagline)
-/// 2. Check authentication status
-/// 3. Navigate to appropriate page:
-///    - If authenticated → HomePage
-///    - If not authenticated → SignInPage
-///
-/// This is a placeholder implementation for Phase 1
-/// Full implementation with BLoC will be done in Phase 3
+/// Displays the splash.png image for 3 seconds
+/// Then checks authentication status and navigates accordingly:
+/// - If user is logged in → Navigate to HomePage
+/// - If user is not logged in → Navigate to SignInPage
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -24,114 +25,65 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    _initializeAndNavigate();
   }
 
-  /// Initialize app and check authentication
-  /// Placeholder for now - will use SplashBloc in Phase 3
-  Future<void> _initializeApp() async {
-    // TODO: Phase 3 - Add SplashBloc to check auth state
-    // final isSignedIn = await sl<IsSignedInUseCase>()(NoParams());
-    // isSignedIn.fold(
-    //   (failure) => Navigator.pushReplacement(context, SignInPage()),
-    //   (signedIn) {
-    //     if (signedIn) {
-    //       Navigator.pushReplacement(context, HomePage());
-    //     } else {
-    //       Navigator.pushReplacement(context, SignInPage());
-    //     }
-    //   },
-    // );
+  /// Initialize app and navigate after checking auth status
+  Future<void> _initializeAndNavigate() async {
+    // Wait for exactly 3 seconds (show splash screen)
+    await Future.delayed(const Duration(seconds: 3));
 
-    // For now, just show splash for 2 seconds
-    await Future.delayed(
-      Duration(seconds: AppConstants.splashDurationSeconds),
-    );
+    // Check if user is logged in
+    final isLoggedIn = await _checkAuthStatus();
 
-    // TODO: Navigate to SignInPage when implemented
-    // For now, stay on splash screen
+    // Navigate based on auth status
+    if (mounted) {
+      if (isLoggedIn) {
+        // User is logged in → Navigate to HomePage
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        );
+      } else {
+        // User is not logged in → Navigate to SignInPage
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const SignInPage(),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Check if user is logged in
+  /// Returns true if auth token exists in SharedPreferences
+  Future<bool> _checkAuthStatus() async {
+    try {
+      // Get SharedPreferences instance from service locator
+      final prefs = sl<SharedPreferences>();
+
+      // Check if auth token exists
+      final token = prefs.getString(StorageConstants.authToken);
+
+      // User is logged in if token is not null and not empty
+      return token != null && token.isNotEmpty;
+    } catch (e) {
+      // If any error occurs, assume user is not logged in
+      return false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Spacer to push content down
-              const Spacer(flex: 2),
-
-              // Large "F." Logo
-              Text(
-                'F.',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 120,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // "FASHION." Text
-              Text(
-                'FASHION.',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 8,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // "E-COMMERCE" Subtitle
-              Text(
-                'E-COMMERCE',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 4,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Tagline
-              Text(
-                AppConstants.appTagline,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 2,
-                ),
-              ),
-
-              // Spacer to push content up
-              const Spacer(flex: 3),
-
-              // Loading indicator
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.textPrimary,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-            ],
-          ),
+      body: Center(
+        child: Image.asset(
+          AppImages.splash,
+          fit: BoxFit.contain,
+          width: double.infinity,
+          height: double.infinity,
         ),
       ),
     );
