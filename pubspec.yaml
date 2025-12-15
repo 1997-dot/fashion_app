@@ -92,7 +92,14 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/images/
+    # Image assets - organized by category
+    - assets/images/splash/
+    - assets/images/men/
+    - assets/images/women/
+    - assets/images/boys/
+    - assets/images/girls/
+
+    # Vector assets
     - assets/vectors/
     - assets/vectors/icons/
 
