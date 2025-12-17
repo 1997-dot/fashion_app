@@ -1,6 +1,7 @@
 /// Custom exceptions for the Fashion E-Commerce app
 /// Used in the data layer to represent different types of errors
 /// These exceptions are transformed to Failures in the domain layer
+library;
 
 /// Base exception class for all custom exceptions
 abstract class AppException implements Exception {

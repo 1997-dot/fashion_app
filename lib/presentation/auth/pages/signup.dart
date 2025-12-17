@@ -6,61 +6,73 @@ import 'package:fashion_app/core/utils/helpers.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_bloc.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_event.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_state.dart';
-import 'package:fashion_app/presentation/auth/pages/signup.dart';
 import 'package:fashion_app/presentation/auth/widgets/auth_button.dart';
 import 'package:fashion_app/presentation/auth/widgets/auth_password_field.dart';
 import 'package:fashion_app/presentation/auth/widgets/auth_text_field.dart';
 import 'package:fashion_app/presentation/home/pages/home.dart';
 import 'package:fashion_app/service_locator.dart';
 
-/// Sign In Page
-/// Allows users to sign in with email and password
-class SignInPage extends StatelessWidget {
-  const SignInPage({super.key});
+/// Sign Up Page
+/// Allows users to create a new account
+class SignUpPage extends StatelessWidget {
+  const SignUpPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<AuthBloc>(),
-      child: const SignInView(),
+      child: const SignUpView(),
     );
   }
 }
 
-class SignInView extends StatefulWidget {
-  const SignInView({super.key});
+class SignUpView extends StatefulWidget {
+  const SignUpView({super.key});
 
   @override
-  State<SignInView> createState() => _SignInViewState();
+  State<SignUpView> createState() => _SignUpViewState();
 }
 
-class _SignInViewState extends State<SignInView> {
+class _SignUpViewState extends State<SignUpView> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String? _nameError;
   String? _emailError;
   String? _passwordError;
+  bool _agreeToTerms = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _onSignIn() {
+  void _onSignUp() {
     // Clear previous errors
     setState(() {
+      _nameError = null;
       _emailError = null;
       _passwordError = null;
     });
 
     // Get values
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     // Basic validation
     bool hasError = false;
+
+    if (name.isEmpty) {
+      setState(() {
+        _nameError = 'Name is required';
+      });
+      hasError = true;
+    }
 
     if (email.isEmpty) {
       setState(() {
@@ -76,23 +88,28 @@ class _SignInViewState extends State<SignInView> {
       hasError = true;
     }
 
+    if (!_agreeToTerms) {
+      Helpers.showErrorSnackbar(
+        context,
+        'Please agree to terms and conditions',
+      );
+      hasError = true;
+    }
+
     if (hasError) return;
 
-    // Dispatch sign in event
+    // Dispatch sign up event
     context.read<AuthBloc>().add(
-          SignInEvent(
+          SignUpEvent(
+            name: name,
             email: email,
             password: password,
           ),
         );
   }
 
-  void _navigateToSignUp() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const SignUpPage(),
-      ),
-    );
+  void _navigateToSignIn() {
+    Navigator.of(context).pop();
   }
 
   @override
@@ -102,7 +119,7 @@ class _SignInViewState extends State<SignInView> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            // Navigate to home page on successful sign in
+            // Navigate to home page on successful sign up
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => const HomePage(),
@@ -115,6 +132,7 @@ class _SignInViewState extends State<SignInView> {
             // Set field errors if available
             if (state.hasFieldErrors) {
               setState(() {
+                _nameError = state.getFieldError('name');
                 _emailError = state.getFieldError('email');
                 _passwordError = state.getFieldError('password');
               });
@@ -134,7 +152,7 @@ class _SignInViewState extends State<SignInView> {
 
                   // Title
                   Text(
-                    'SIGN IN',
+                    'CREATE ACCOUNT',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 28,
@@ -147,7 +165,7 @@ class _SignInViewState extends State<SignInView> {
 
                   // Subtitle
                   Text(
-                    'Welcome back! Please sign in to continue',
+                    'Sign up to get started',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
@@ -155,6 +173,24 @@ class _SignInViewState extends State<SignInView> {
                   ),
 
                   const SizedBox(height: 48),
+
+                  // Name field
+                  AuthTextField(
+                    hint: 'Name',
+                    controller: _nameController,
+                    keyboardType: TextInputType.name,
+                    errorText: _nameError,
+                    enabled: !isLoading,
+                    onChanged: (_) {
+                      if (_nameError != null) {
+                        setState(() {
+                          _nameError = null;
+                        });
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Email field
                   AuthTextField(
@@ -189,32 +225,70 @@ class _SignInViewState extends State<SignInView> {
                     },
                   ),
 
+                  const SizedBox(height: 20),
+
+                  // Terms and conditions checkbox
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: _agreeToTerms,
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _agreeToTerms = value ?? false;
+                                  });
+                                },
+                          activeColor: AppColors.textPrimary,
+                          checkColor: AppColors.background,
+                          side: BorderSide(
+                            color: AppColors.textSecondary,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'I agree to terms and conditions',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 32),
 
-                  // Sign In button
+                  // Sign Up button
                   AuthButton(
-                    text: 'SIGN IN',
-                    onPressed: _onSignIn,
+                    text: 'SIGN UP',
+                    onPressed: _onSignUp,
                     isLoading: isLoading,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Sign Up link
+                  // Log in link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'Already have an account? ',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
                       ),
                       GestureDetector(
-                        onTap: isLoading ? null : _navigateToSignUp,
+                        onTap: isLoading ? null : _navigateToSignIn,
                         child: Text(
-                          'Sign up',
+                          'Log in',
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 14,

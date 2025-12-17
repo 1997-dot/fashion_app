@@ -2,6 +2,16 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fashion_app/core/network/dio_client.dart';
+import 'package:fashion_app/data/auth/repositories/auth_repository_impl.dart';
+import 'package:fashion_app/data/auth/sources/auth_local_data_source.dart';
+import 'package:fashion_app/data/auth/sources/auth_remote_data_source.dart';
+import 'package:fashion_app/domain/auth/repositories/auth_repository.dart';
+import 'package:fashion_app/domain/auth/usecases/get_current_user.dart';
+import 'package:fashion_app/domain/auth/usecases/is_signed_in.dart';
+import 'package:fashion_app/domain/auth/usecases/signin.dart';
+import 'package:fashion_app/domain/auth/usecases/signout.dart';
+import 'package:fashion_app/domain/auth/usecases/signup.dart';
+import 'package:fashion_app/presentation/auth/bloc/auth_bloc.dart';
 
 /// Global service locator instance
 /// Used for dependency injection throughout the app
@@ -49,60 +59,55 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<DioClient>(() => DioClient());
 
   // ==================== AUTHENTICATION FEATURE ====================
-  // Will be registered when implementing Phase 2
-  // Example structure:
 
-  // // Data sources
-  // sl.registerLazySingleton<AuthRemoteDataSource>(
-  //   () => AuthRemoteDataSourceImpl(dioClient: sl()),
-  // );
-  //
-  // sl.registerLazySingleton<AuthLocalDataSource>(
-  //   () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
-  // );
-  //
-  // // Repository
-  // sl.registerLazySingleton<AuthRepository>(
-  //   () => AuthRepositoryImpl(
-  //     remoteDataSource: sl(),
-  //     localDataSource: sl(),
-  //   ),
-  // );
-  //
-  // // Use cases
-  // sl.registerLazySingleton<SignInUseCase>(
-  //   () => SignInUseCase(repository: sl()),
-  // );
-  //
-  // sl.registerLazySingleton<SignUpUseCase>(
-  //   () => SignUpUseCase(repository: sl()),
-  // );
-  //
-  // sl.registerLazySingleton<SignOutUseCase>(
-  //   () => SignOutUseCase(repository: sl()),
-  // );
-  //
-  // sl.registerLazySingleton<GetCurrentUserUseCase>(
-  //   () => GetCurrentUserUseCase(repository: sl()),
-  // );
-  //
-  // sl.registerLazySingleton<IsSignedInUseCase>(
-  //   () => IsSignedInUseCase(repository: sl()),
-  // );
-  //
-  // // BLoCs (factory - new instance each time)
-  // sl.registerFactory<AuthBloc>(
-  //   () => AuthBloc(
-  //     signIn: sl(),
-  //     signUp: sl(),
-  //     signOut: sl(),
-  //     getCurrentUser: sl(),
-  //   ),
-  // );
-  //
-  // sl.registerFactory<SplashBloc>(
-  //   () => SplashBloc(isSignedIn: sl()),
-  // );
+  // Data sources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(dioClient: sl()),
+  );
+
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton<SignInUseCase>(
+    () => SignInUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<SignUpUseCase>(
+    () => SignUpUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<SignOutUseCase>(
+    () => SignOutUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<GetCurrentUserUseCase>(
+    () => GetCurrentUserUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<IsSignedInUseCase>(
+    () => IsSignedInUseCase(repository: sl()),
+  );
+
+  // BLoCs (factory - new instance each time)
+  sl.registerFactory<AuthBloc>(
+    () => AuthBloc(
+      signInUseCase: sl(),
+      signUpUseCase: sl(),
+      signOutUseCase: sl(),
+      getCurrentUserUseCase: sl(),
+      isSignedInUseCase: sl(),
+    ),
+  );
 
   // ==================== PRODUCT FEATURE ====================
   // Will be registered when implementing Phase 4

@@ -80,8 +80,8 @@ class ServerFailure extends Failure {
 /// Maps from: NetworkException
 class NetworkFailure extends Failure {
   const NetworkFailure([
-    String message = 'Network error. Please check your connection.',
-  ]) : super(message);
+    super.message = 'Network error. Please check your connection.',
+  ]);
 
   @override
   String toString() => 'Network Error: $message';
@@ -94,8 +94,8 @@ class NetworkFailure extends Failure {
 /// Maps from: UnauthorizedException
 class AuthFailure extends Failure {
   const AuthFailure([
-    String message = 'Authentication failed. Please login again.',
-  ]) : super(message);
+    super.message = 'Authentication failed. Please login again.',
+  ]);
 
   @override
   String toString() => 'Authentication Error: $message';
@@ -108,8 +108,8 @@ class AuthFailure extends Failure {
 /// Maps from: CacheException
 class CacheFailure extends Failure {
   const CacheFailure([
-    String message = 'Local storage error occurred.',
-  ]) : super(message);
+    super.message = 'Local storage error occurred.',
+  ]);
 
   @override
   String toString() => 'Cache Error: $message';
@@ -163,8 +163,8 @@ class ValidationFailure extends Failure {
 /// Maps from: FileException
 class FileFailure extends Failure {
   const FileFailure([
-    String message = 'File operation failed.',
-  ]) : super(message);
+    super.message = 'File operation failed.',
+  ]);
 
   @override
   String toString() => 'File Error: $message';
@@ -177,8 +177,8 @@ class FileFailure extends Failure {
 /// Maps from: ParsingException
 class ParsingFailure extends Failure {
   const ParsingFailure([
-    String message = 'Failed to parse data.',
-  ]) : super(message);
+    super.message = 'Failed to parse data.',
+  ]);
 
   @override
   String toString() => 'Parsing Error: $message';
@@ -210,8 +210,8 @@ class PermissionFailure extends Failure {
 /// Used for: 404 errors, missing data
 class NotFoundFailure extends Failure {
   const NotFoundFailure([
-    String message = 'Resource not found.',
-  ]) : super(message);
+    super.message = 'Resource not found.',
+  ]);
 
   @override
   String toString() => 'Not Found: $message';
@@ -223,8 +223,8 @@ class NotFoundFailure extends Failure {
 /// Used as fallback when error type is unknown
 class UnknownFailure extends Failure {
   const UnknownFailure([
-    String message = 'An unexpected error occurred.',
-  ]) : super(message);
+    super.message = 'An unexpected error occurred.',
+  ]);
 
   @override
   String toString() => 'Unknown Error: $message';
