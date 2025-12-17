@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:fashion_app/core/configs/theme/app_colors.dart';
-import 'package:fashion_app/core/utils/helpers.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_bloc.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_event.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_state.dart';
@@ -41,6 +40,8 @@ class _SignUpViewState extends State<SignUpView> {
   String? _nameError;
   String? _emailError;
   String? _passwordError;
+  String? _generalError;
+  String? _termsError;
   bool _agreeToTerms = false;
 
   @override
@@ -57,6 +58,8 @@ class _SignUpViewState extends State<SignUpView> {
       _nameError = null;
       _emailError = null;
       _passwordError = null;
+      _generalError = null;
+      _termsError = null;
     });
 
     // Get values
@@ -89,10 +92,9 @@ class _SignUpViewState extends State<SignUpView> {
     }
 
     if (!_agreeToTerms) {
-      Helpers.showErrorSnackbar(
-        context,
-        'Please agree to terms and conditions',
-      );
+      setState(() {
+        _termsError = 'Please agree to terms and conditions';
+      });
       hasError = true;
     }
 
@@ -126,15 +128,27 @@ class _SignUpViewState extends State<SignUpView> {
               ),
             );
           } else if (state is AuthError) {
-            // Show error message
-            Helpers.showErrorSnackbar(context, state.message);
-
             // Set field errors if available
             if (state.hasFieldErrors) {
               setState(() {
                 _nameError = state.getFieldError('name');
                 _emailError = state.getFieldError('email');
                 _passwordError = state.getFieldError('password');
+              });
+            } else {
+              // Show general error under password field if no field-specific errors
+              setState(() {
+                _generalError = state.message.contains('email') &&
+                        (state.message.contains('taken') ||
+                            state.message.contains('exists') ||
+                            state.message.contains('already'))
+                    ? 'This email is already registered. Please use a different email or try signing in.'
+                    : state.message.contains('password') &&
+                            (state.message.contains('weak') ||
+                                state.message.contains('short') ||
+                                state.message.contains('requirements'))
+                        ? 'Password must be at least 8 characters long and contain letters and numbers.'
+                        : state.message;
               });
             }
           }
@@ -146,13 +160,14 @@ class _SignUpViewState extends State<SignUpView> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 60),
 
-                  // Title
+                  // Title - Centered
                   Text(
                     'CREATE ACCOUNT',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 28,
@@ -163,9 +178,10 @@ class _SignUpViewState extends State<SignUpView> {
 
                   const SizedBox(height: 8),
 
-                  // Subtitle
+                  // Subtitle - Centered
                   Text(
                     'Sign up to get started',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
@@ -225,6 +241,44 @@ class _SignUpViewState extends State<SignUpView> {
                     },
                   ),
 
+                  // General error message under password field
+                  if (_generalError != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.error.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _generalError!,
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 20),
 
                   // Terms and conditions checkbox
@@ -240,12 +294,17 @@ class _SignUpViewState extends State<SignUpView> {
                               : (value) {
                                   setState(() {
                                     _agreeToTerms = value ?? false;
+                                    if (_agreeToTerms) {
+                                      _termsError = null;
+                                    }
                                   });
                                 },
                           activeColor: AppColors.textPrimary,
                           checkColor: AppColors.background,
                           side: BorderSide(
-                            color: AppColors.textSecondary,
+                            color: _termsError != null
+                                ? AppColors.error
+                                : AppColors.textSecondary,
                             width: 1.5,
                           ),
                         ),
@@ -255,13 +314,30 @@ class _SignUpViewState extends State<SignUpView> {
                         child: Text(
                           'I agree to terms and conditions',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: _termsError != null
+                                ? AppColors.error
+                                : AppColors.textSecondary,
                             fontSize: 14,
                           ),
                         ),
                       ),
                     ],
                   ),
+
+                  // Terms error message
+                  if (_termsError != null) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(
+                        _termsError!,
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 32),
 

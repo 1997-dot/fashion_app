@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:fashion_app/core/configs/theme/app_colors.dart';
-import 'package:fashion_app/core/utils/helpers.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_bloc.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_event.dart';
 import 'package:fashion_app/presentation/auth/bloc/auth_state.dart';
@@ -40,6 +39,7 @@ class _SignInViewState extends State<SignInView> {
 
   String? _emailError;
   String? _passwordError;
+  String? _generalError;
 
   @override
   void dispose() {
@@ -53,6 +53,7 @@ class _SignInViewState extends State<SignInView> {
     setState(() {
       _emailError = null;
       _passwordError = null;
+      _generalError = null;
     });
 
     // Get values
@@ -109,14 +110,21 @@ class _SignInViewState extends State<SignInView> {
               ),
             );
           } else if (state is AuthError) {
-            // Show error message
-            Helpers.showErrorSnackbar(context, state.message);
-
             // Set field errors if available
             if (state.hasFieldErrors) {
               setState(() {
                 _emailError = state.getFieldError('email');
                 _passwordError = state.getFieldError('password');
+              });
+            } else {
+              // Show general error under password field if no field-specific errors
+              setState(() {
+                _generalError = state.message.contains('credentials') ||
+                        state.message.contains('Invalid') ||
+                        state.message.contains('incorrect') ||
+                        state.message.contains('not found')
+                    ? 'Invalid email or password. Please check your credentials and try again.'
+                    : state.message;
               });
             }
           }
@@ -128,13 +136,14 @@ class _SignInViewState extends State<SignInView> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 60),
 
-                  // Title
+                  // Title - Centered
                   Text(
                     'SIGN IN',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 28,
@@ -145,9 +154,10 @@ class _SignInViewState extends State<SignInView> {
 
                   const SizedBox(height: 8),
 
-                  // Subtitle
+                  // Subtitle - Centered
                   Text(
                     'Welcome back! Please sign in to continue',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
@@ -188,6 +198,44 @@ class _SignInViewState extends State<SignInView> {
                       }
                     },
                   ),
+
+                  // General error message under password field
+                  if (_generalError != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.error.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _generalError!,
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 32),
 
