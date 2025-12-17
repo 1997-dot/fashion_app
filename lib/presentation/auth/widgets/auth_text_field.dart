@@ -28,7 +28,7 @@ class AuthTextField extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1F1F1F),
+            color: const Color(0xFF404040),
             borderRadius: BorderRadius.circular(8),
             border: errorText != null
                 ? Border.all(color: AppColors.error, width: 1)
