@@ -39,7 +39,7 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: const Color(0xFF1F1F1F),
             borderRadius: BorderRadius.circular(8),
             border: widget.errorText != null
                 ? Border.all(color: AppColors.error, width: 1)
